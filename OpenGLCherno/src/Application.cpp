@@ -31,7 +31,7 @@ int main(void)
         return -1;
     }
 
-    glUseProgram(shader.getID());
+    win.setShader(shader);
 
     /* Loop until the user closes the window */
     while (!win.shouldClose())
@@ -45,6 +45,6 @@ int main(void)
         win.display();
     }
 
-    glfwTerminate();
+    
     return 0;
 }

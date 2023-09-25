@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "GlError.h"
 #include "Util.h"
 
 Mesh::Mesh()
@@ -188,20 +189,6 @@ bool Mesh::loadFromFile(const std::string& path)
     }
 
     ifs.close();
-
-    std::cout << getVerticesCount() << " vertices:\n";
-    for (const auto& v : m_Vertices)
-    {
-        std::cout << "pos : " << v.position.x << "," << v.position.y << "," << v.position.z;
-        std::cout << ",norm : " << v.normal.x << "," << v.normal.y << "," << v.normal.z;
-        std::cout << std::endl;
-    }
-    std::cout << getTrianglesCount() << " triangles:\n";
-    for (size_t i = 0; i < getTrianglesCount(); i++)
-    {
-        std::cout << m_Indices[3 * i] << " " << m_Indices[3 * i + 1] << " " << m_Indices[3 * i + 2] << std::endl;
-    }
-
     return true;
 }
 
@@ -232,27 +219,27 @@ void Mesh::draw(Window& window) const
 {
     // Vertices
     unsigned int glBuffer;
-    glGenBuffers(1, &glBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
+    GLCall(glGenBuffers(1, &glBuffer));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, glBuffer));
     // Filling buffer with vertices
-    glBufferData(GL_ARRAY_BUFFER, m_Vertices.size() * sizeof(Vertex), getVerticesData(), GL_STATIC_DRAW);
+    GLCall(glBufferData(GL_ARRAY_BUFFER, m_Vertices.size() * sizeof(Vertex), getVerticesData(), GL_STATIC_DRAW));
 
     // Laying out the buffer
-    glEnableVertexAttribArray(Vertex::POSITION_ATTRIB_INDEX);
+    GLCall(glEnableVertexAttribArray(Vertex::POSITION_ATTRIB_INDEX));
     // A vertex stores 3 components : x, y, z
     // Because positions, normals, ..., are not tightly packed, the byte offset between consecutive generic attributes is the size of a Vertex
     // We provide the offset of the positition in a vertex.
-    glVertexAttribPointer(Vertex::POSITION_ATTRIB_INDEX, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)Vertex::POSITION_ATTRIB_OFFSET);
+    GLCall(glVertexAttribPointer(Vertex::POSITION_ATTRIB_INDEX, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)Vertex::POSITION_ATTRIB_OFFSET));
 
     unsigned int glIndicesBuffer;
-    glGenBuffers(1, &glIndicesBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glIndicesBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(unsigned int), getIndicesData(), GL_STATIC_DRAW);
+    GLCall(glGenBuffers(1, &glIndicesBuffer));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glIndicesBuffer));
+    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(unsigned int), getIndicesData(), GL_STATIC_DRAW));
+    
+    GLCall(glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, nullptr));
 
-    glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, nullptr);
-
-    glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
-    glDisableVertexAttribArray(0);
-    glDeleteBuffers(1, &glBuffer);
-    glDeleteBuffers(1, &glIndicesBuffer);
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, glBuffer));
+    GLCall(glDisableVertexAttribArray(0));
+    GLCall(glDeleteBuffers(1, &glBuffer));
+    GLCall(glDeleteBuffers(1, &glIndicesBuffer));
 }

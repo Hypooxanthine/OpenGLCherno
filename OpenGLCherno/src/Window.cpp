@@ -2,7 +2,9 @@
 
 #include <iostream>
 
+#include "GlError.h"
 #include "Drawable.h"
+#include "Shader.h"
 
 bool Window::s_GLFWInit = false;
 bool Window::s_GLEWInit = false;
@@ -19,7 +21,7 @@ Window::Window()
 
 Window::~Window()
 {
-
+	
 }
 
 bool Window::create(const Vector2u& size, const std::string& title)
@@ -73,8 +75,8 @@ bool Window::shouldClose() const
 
 void Window::clear(const Color& color)
 {
-	glClearColor(color.r, color.g, color.b, color.a);
-	glClear(GL_COLOR_BUFFER_BIT);
+	GLCall(glClearColor(color.r, color.g, color.b, color.a));
+	GLCall(glClear(GL_COLOR_BUFFER_BIT));
 }
 
 void Window::display()
@@ -90,4 +92,9 @@ void Window::draw(const IDrawable& drawable)
 void Window::pollEvents()
 {
 	glfwPollEvents();
+}
+
+void Window::setShader(const Shader& shader)
+{
+	GLCall(glUseProgram(shader.getID()));
 }

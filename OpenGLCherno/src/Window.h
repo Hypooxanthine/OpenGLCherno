@@ -9,6 +9,7 @@
 #include "Color.h"
 
 class IDrawable;
+class Shader;
 
 class Window
 {
@@ -29,6 +30,8 @@ public:
 	void draw(const IDrawable& drawable);
 
 	void pollEvents();
+
+	void setShader(const Shader& shader);
 
 private:
 	static bool s_GLFWInit;
