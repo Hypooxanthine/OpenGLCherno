@@ -141,7 +141,7 @@ bool Mesh::loadFromFile(const std::string& path)
         }
         else if (token == "t")
         {
-            int index[3] = { 0, 0, 0 };
+            unsigned int index[3] = { 0, 0, 0 };
 
             for (uint8_t i = 0; i < 3; i++)
             {
@@ -150,23 +150,27 @@ bool Mesh::loadFromFile(const std::string& path)
 
                 ss >> token;
 
+                int value = 0;
+
                 try
                 {
-                    index[i] = std::stoi(token);
+                    value = std::stol(token);
                 }
                 catch (std::invalid_argument)
                 {
-                    return debugMesh("Couldn't interpret triangle index \"" + token + "\" as an int.");
+                    return debugMesh("Couldn't interpret triangle index \"" + token + "\" as an unsigned int.");
                 }
                 catch (std::out_of_range)
                 {
-                    return debugMesh("Triangle index \"" + token + "\" is out of range of int type.");
+                    return debugMesh("Triangle index \"" + token + "\" is out of range of unsigned int type.");
                 }
 
-                if (index[i] >= getVerticesCount())
-                    return debugMesh("Vertex of index " + std::to_string(index[i]) + " is undefined. You need to define a vertex before assigning its index to a triangle.");
-                else if (index[i] < 0)
+                if (value >= getVerticesCount())
+                    return debugMesh("Vertex of index " + std::to_string(value) + " is undefined. You need to define a vertex before assigning its index to a triangle.");
+                else if (value < 0)
                     return debugMesh("A vertex index must be positive.");
+
+                index[i] = (unsigned int)value;
             }
 
             if (!ss.eof())
@@ -184,6 +188,20 @@ bool Mesh::loadFromFile(const std::string& path)
     }
 
     ifs.close();
+
+    std::cout << getVerticesCount() << " vertices:\n";
+    for (const auto& v : m_Vertices)
+    {
+        std::cout << "pos : " << v.position.x << "," << v.position.y << "," << v.position.z;
+        std::cout << ",norm : " << v.normal.x << "," << v.normal.y << "," << v.normal.z;
+        std::cout << std::endl;
+    }
+    std::cout << getTrianglesCount() << " triangles:\n";
+    for (size_t i = 0; i < getTrianglesCount(); i++)
+    {
+        std::cout << m_Indices[3 * i] << " " << m_Indices[3 * i + 1] << " " << m_Indices[3 * i + 2] << std::endl;
+    }
+
     return true;
 }
 
@@ -212,26 +230,29 @@ void Mesh::defineTriangle(int a, int b, int c)
 
 void Mesh::draw(Window& window) const
 {
-    for(size_t i = 0 ; i < m_Indices.size() ; i += 3)
-    {
-        Vertex triangleBuffer[3] =
-        {
-            m_Vertices[m_Indices[i]],
-            m_Vertices[m_Indices[i + 1]],
-            m_Vertices[m_Indices[i + 2]]
-        };
+    // Vertices
+    unsigned int glBuffer;
+    glGenBuffers(1, &glBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
+    // Filling buffer with vertices
+    glBufferData(GL_ARRAY_BUFFER, m_Vertices.size() * sizeof(Vertex), getVerticesData(), GL_STATIC_DRAW);
 
-        unsigned int glBuffer;
-        glGenBuffers(1, &glBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
-        glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(Vertex), triangleBuffer, GL_STATIC_DRAW);
+    // Laying out the buffer
+    glEnableVertexAttribArray(Vertex::POSITION_ATTRIB_INDEX);
+    // A vertex stores 3 components : x, y, z
+    // Because positions, normals, ..., are not tightly packed, the byte offset between consecutive generic attributes is the size of a Vertex
+    // We provide the offset of the positition in a vertex.
+    glVertexAttribPointer(Vertex::POSITION_ATTRIB_INDEX, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)Vertex::POSITION_ATTRIB_OFFSET);
 
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(Vertex::POSITION_ATTRIB_INDEX, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)Vertex::POSITION_ATTRIB_OFFSET);
+    unsigned int glIndicesBuffer;
+    glGenBuffers(1, &glIndicesBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glIndicesBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(unsigned int), getIndicesData(), GL_STATIC_DRAW);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, nullptr);
 
-        glDisableVertexAttribArray(0);
-        glDeleteBuffers(1, &glBuffer);
-    }
+    glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
+    glDisableVertexAttribArray(0);
+    glDeleteBuffers(1, &glBuffer);
+    glDeleteBuffers(1, &glIndicesBuffer);
 }

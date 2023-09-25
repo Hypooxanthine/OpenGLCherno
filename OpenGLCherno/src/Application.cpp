@@ -24,19 +24,6 @@ int main(void)
     Mesh m;
     m.loadFromFile("Meshes/test.mesh");
 
-    /*Vertex v;
-    v.position = {-1.f, -1.f, 0.f};
-    v.normal = { -1.f, -1.f, 0.f }; 
-    m.addVertex(v);
-    v.position = { 1.f, -1.f, 0.f };
-    v.normal = { 1.f, -1.f, 0.f };
-    m.addVertex(v);
-    v.position = { 0.f, 1.f, 0.f };
-    v.normal = { 0.f, 1.f, 0.f };
-    m.addVertex(v);
-
-    m.defineTriangle(0, 1, 2);*/
-
     Shader shader;
     if (!shader.loadFromFile("Shaders/vertex.shader", "Shaders/fragment.shader"))
     {

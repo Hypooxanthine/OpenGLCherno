@@ -26,7 +26,7 @@ public:
     Mesh();
 
     inline const Vertex* getVerticesData() const { return m_Vertices.data(); }
-    inline const int* getIndicesData() const { return m_Indices.data(); }
+    inline const unsigned int* getIndicesData() const { return m_Indices.data(); }
 
     inline size_t getVerticesCount() const { return m_Vertices.size(); }
     inline size_t getTrianglesCount() const { return m_Indices.size() / 3; }
@@ -43,5 +43,5 @@ public:
 
 private:
     std::vector<Vertex> m_Vertices;
-    std::vector<int> m_Indices; // Indices stockés trois par trois.
+    std::vector<unsigned int> m_Indices; // Indices stockés trois par trois.
 };
